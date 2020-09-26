@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import moment from 'moment';
 import Card from '../../Components/Card';
 import { PiggyBank } from '@styled-icons/fa-solid/PiggyBank';
 import { AttachMoney } from '@styled-icons/material-outlined/AttachMoney';
@@ -42,9 +43,14 @@ const Text = styled.div`
 
 export type HomeProps = {
   total: string;
+  exchangeRate: {
+    exchangeRate: number;
+    updatedAt: string;
+  };
 };
 
-const HomePresenter = ({ total }: HomeProps) => {
+const HomePresenter = ({ total, exchangeRate }: HomeProps) => {
+  const { exchangeRate: rate, updatedAt } = exchangeRate;
   return (
     <Container>
       <Card>
@@ -56,11 +62,13 @@ const HomePresenter = ({ total }: HomeProps) => {
       </Card>
       <Card>
         <Title>환율</Title>
-        <DateTitle>2020.09.26 19:41:30</DateTitle>
+        <DateTitle>
+          기준일 : {moment(updatedAt).format('YYYY. MM. DD')}
+        </DateTitle>
         <IconStyleWrapper>
           <AttachMoney />
         </IconStyleWrapper>
-        <Text>1684.7원</Text>
+        <Text>{rate}원</Text>
       </Card>
     </Container>
   );

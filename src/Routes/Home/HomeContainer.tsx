@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import HomePresenter from './HomePresenter';
-import { Query } from 'react-apollo';
+import { Query, Mutation, useQuery, useMutation } from 'react-apollo';
 import gql from 'graphql-tag';
 import { CURRENCY } from '../../types';
 
@@ -26,31 +26,41 @@ const getAbstractNumber = (num: number, currency: CURRENCY): string => {
   return `$ ${markingComma(num)}`;
 };
 
-const TOTAL_ASSETS = gql`
+const GET_ASSETS = gql`
   {
     assets {
       total
       currency
     }
+    setting {
+      exchangeRate
+      updatedAt
+    }
+  }
+`;
+
+const UPDATE_ASSETS = gql`
+  mutation {
+    renewAssetInfo
   }
 `;
 
 const HomeContainer = () => {
-  return (
-    <Query query={TOTAL_ASSETS}>
-      {({ loading, error, data }: any) => {
-        if (loading) return <div>Fetching</div>;
-        if (error) return <div>Error</div>;
+  const { loading, error, data } = useQuery(GET_ASSETS);
+  const [updateAssets] = useMutation(UPDATE_ASSETS);
+  useEffect(() => {
+    updateAssets();
+  }, []);
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error :(</p>;
 
-        const {
-          assets: { total: amount, currency },
-        } = data;
+  const {
+    assets: { total: amount, currency },
+    setting,
+  } = data;
 
-        const total = getAbstractNumber(amount, currency);
+  const total = getAbstractNumber(amount, currency);
 
-        return <HomePresenter total={total} />;
-      }}
-    </Query>
-  );
+  return <HomePresenter total={total} exchangeRate={setting[0]} />;
 };
 export default HomeContainer;
