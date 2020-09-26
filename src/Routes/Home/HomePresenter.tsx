@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import Card from '../../Components/Card';
 import { PiggyBank } from '@styled-icons/fa-solid/PiggyBank';
 import { AttachMoney } from '@styled-icons/material-outlined/AttachMoney';
+import { types } from '@babel/core';
+import { CURRENCY } from '../../types';
 
 const IconStyleWrapper = styled.div`
   align-self: center;
@@ -38,7 +40,11 @@ const Text = styled.div`
   font-weight: bold;
 `;
 
-const HomePresenter = () => {
+export type HomeProps = {
+  total: string;
+};
+
+const HomePresenter = ({ total }: HomeProps) => {
   return (
     <Container>
       <Card>
@@ -46,7 +52,7 @@ const HomePresenter = () => {
         <IconStyleWrapper>
           <PiggyBank />
         </IconStyleWrapper>
-        <Text>1000만원</Text>
+        <Text>{total}</Text>
       </Card>
       <Card>
         <Title>환율</Title>
