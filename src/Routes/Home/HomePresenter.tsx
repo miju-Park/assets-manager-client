@@ -69,7 +69,8 @@ const HomePresenter = ({ total, exchangeRate, summaryItem }: HomeProps) => {
       <Card>
         <Title>환율</Title>
         <DateTitle>
-          기준일 : {moment(updatedAt).format('YYYY. MM. DD')}
+          기준일 :{' '}
+          {updatedAt !== '-' ? moment(updatedAt).format('YYYY. MM. DD') : '-'}
         </DateTitle>
         <IconStyleWrapper>
           <AttachMoney />
@@ -85,5 +86,14 @@ const HomePresenter = ({ total, exchangeRate, summaryItem }: HomeProps) => {
       </Card>
     </Container>
   );
+};
+
+HomePresenter.defaultProps = {
+  total: '',
+  exchangeRate: {
+    exchangeRate: 0,
+    updatedAt: '-',
+  },
+  summaryItem: [],
 };
 export default HomePresenter;

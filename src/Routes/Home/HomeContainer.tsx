@@ -41,7 +41,7 @@ const HomeContainer = () => {
     }
   }, []);
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error :(</p>;
+  if (error) return <HomePresenter />;
 
   const {
     assetsSummary: { total: amount, currency, list },
