@@ -6,6 +6,7 @@ import { PiggyBank } from '@styled-icons/fa-solid/PiggyBank';
 import { AttachMoney } from '@styled-icons/material-outlined/AttachMoney';
 import { types } from '@babel/core';
 import { CURRENCY } from '../../types';
+import PieChart from '../../Components/PieChart';
 
 const IconStyleWrapper = styled.div`
   align-self: center;
@@ -47,9 +48,14 @@ export type HomeProps = {
     exchangeRate: number;
     updatedAt: string;
   };
+  summaryItem: {
+    id: string;
+    value: number;
+    label: string;
+  }[];
 };
 
-const HomePresenter = ({ total, exchangeRate }: HomeProps) => {
+const HomePresenter = ({ total, exchangeRate, summaryItem }: HomeProps) => {
   const { exchangeRate: rate, updatedAt } = exchangeRate;
   return (
     <Container>
@@ -69,6 +75,13 @@ const HomePresenter = ({ total, exchangeRate }: HomeProps) => {
           <AttachMoney />
         </IconStyleWrapper>
         <Text>{rate}원</Text>
+      </Card>
+      <Card>
+        <Title>자산비율</Title>
+        <PieChart
+          data={summaryItem}
+          margin={{ top: 10, right: 20, bottom: 10, left: 20 }}
+        />
       </Card>
     </Container>
   );

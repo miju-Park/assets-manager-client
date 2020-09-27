@@ -1,36 +1,20 @@
 import React, { useEffect } from 'react';
+import moment from 'moment';
 import HomePresenter from './HomePresenter';
-import { Query, Mutation, useQuery, useMutation } from 'react-apollo';
+import { useQuery, useMutation } from 'react-apollo';
 import gql from 'graphql-tag';
-import { CURRENCY } from '../../types';
-
-const markingComma = (num: number): string => {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-};
-
-const getAbstractNumber = (num: number, currency: CURRENCY): string => {
-  if (currency === CURRENCY.KRW) {
-    const targetNumber = parseInt(num + '');
-    if (targetNumber.toString().length > 7) {
-      const hundredMillion = parseInt(targetNumber / 100000000 + '');
-      const remain = targetNumber % 100000000;
-      return `${hundredMillion}억${
-        remain !== 0
-          ? ` ${markingComma(parseInt(remain / 10000 + ''))} 만원`
-          : '원'
-      }`;
-    } else {
-      return `${markingComma(parseInt(targetNumber / 10000 + ''))}만원`;
-    }
-  }
-  return `$ ${markingComma(num)}`;
-};
+import { getAbstractNumber, getAssetsLabel } from '../../utils';
+import { ASSETS_TYPE } from '../../types';
 
 const GET_ASSETS = gql`
   {
-    assets {
+    assetsSummary(filter: "Cash") {
       total
       currency
+      list {
+        type
+        total
+      }
     }
     setting {
       exchangeRate
@@ -49,18 +33,55 @@ const HomeContainer = () => {
   const { loading, error, data } = useQuery(GET_ASSETS);
   const [updateAssets] = useMutation(UPDATE_ASSETS);
   useEffect(() => {
-    updateAssets();
+    const updatedAt = localStorage.getItem('update') || '';
+    const today = moment().format('YYYY-MM-DD');
+    if (updatedAt !== today) {
+      localStorage.setItem('update', today);
+      updateAssets();
+    }
   }, []);
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error :(</p>;
 
   const {
-    assets: { total: amount, currency },
+    assetsSummary: { total: amount, currency, list },
     setting,
   } = data;
 
+  const summaryList: { type: string; total: number }[] = list;
+
+  const stocks = summaryList.filter(
+    item =>
+      item.type === ASSETS_TYPE.USDStock || item.type === ASSETS_TYPE.KRStock,
+  );
+
+  const summary = summaryList
+    .filter(
+      item =>
+        item.type !== ASSETS_TYPE.USDStock && item.type !== ASSETS_TYPE.KRStock,
+    )
+    .map(item => {
+      return {
+        id: item.type,
+        value: item.total,
+        label: getAssetsLabel(item.type as ASSETS_TYPE),
+      };
+    });
   const total = getAbstractNumber(amount, currency);
 
-  return <HomePresenter total={total} exchangeRate={setting[0]} />;
+  return (
+    <HomePresenter
+      total={total}
+      exchangeRate={setting[0]}
+      summaryItem={[
+        ...summary,
+        {
+          id: 'Stock',
+          value: stocks.reduce((sum, stock) => sum + stock.total, 0),
+          label: '주식',
+        },
+      ]}
+    />
+  );
 };
 export default HomeContainer;
