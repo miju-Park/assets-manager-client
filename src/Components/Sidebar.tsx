@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { StyledIconBase } from '@styled-icons/styled-icon';
 import { Dashboard } from '@styled-icons/zondicons/Dashboard';
+import { Monitor } from '@styled-icons/open-iconic/Monitor';
 import { useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
 
@@ -104,6 +105,18 @@ const Sidebar = () => {
               <Dashboard />
             </IconStyleWrapper>
             Dashboard
+          </MenuItem>
+        </MenuContainer>
+        <SubTitle>Management</SubTitle>
+        <MenuContainer>
+          <MenuItem
+            to="/setting/krstock"
+            active={pathname === '/setting/krstock'}
+          >
+            <IconStyleWrapper>
+              <Monitor />
+            </IconStyleWrapper>
+            국내주식
           </MenuItem>
         </MenuContainer>
       </SidebarWrapper>
