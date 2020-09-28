@@ -8,17 +8,17 @@ import { AddCircle } from '@styled-icons/ionicons-outline/AddCircle';
 
 export type TableProps = {
   columns: TableColumnInfo[];
-  rows: { [key: string]: string | number }[];
+  rows: { [key: string]: string | number | boolean }[];
   showIndex: boolean;
   editable: boolean;
   summary: {
     current: number;
     average: number;
   };
-  onRemove: (id: number) => void;
+  onRemove: (id: string) => void;
   onAdd: () => void;
   onUpdate: (
-    id: number,
+    id: string,
     field: string,
     value: string | number | boolean,
   ) => void;
@@ -32,12 +32,14 @@ const Title = styled.h3`
 
 const TableContainer = styled.div`
   padding-left: 10px;
+  position: relative;
   background-color: #27293d;
   display: grid;
   grid-auto-rows: 40px;
   align-items: stretch;
   justify-items: stretch;
 `;
+
 const TableAddColumn = styled.div`
   display: flex;
   width: 100%;
@@ -45,7 +47,6 @@ const TableAddColumn = styled.div`
   align-items: center;
 `;
 const IconStyle = styled.span`
-  color: white;
   color: white;
   width: 35px;
   height: 35px;

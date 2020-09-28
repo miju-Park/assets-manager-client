@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { TableColumnInfo } from '../../types';
 import { EditAlt } from '@styled-icons/boxicons-regular/EditAlt';
@@ -7,12 +7,12 @@ import { DeleteOutline } from '@styled-icons/material/DeleteOutline';
 
 type TableRowProps = {
   columns: TableColumnInfo[];
-  rows: { [key: string]: string | number }[];
+  rows: { [key: string]: string | number | boolean }[];
   showIndex: boolean;
   editable: boolean;
-  onRemove: (id: number) => void;
+  onRemove: (id: string) => void;
   onUpdate: (
-    id: number,
+    id: string,
     field: string,
     value: string | number | boolean,
   ) => void;
@@ -55,6 +55,15 @@ const TableRow = ({
   onRemove,
   onUpdate,
 }: TableRowProps) => {
+  const [inputs, setInputs] = useState([]);
+  useEffect(() => {
+    const editableParams = columns
+      .filter(col => col.editable)
+      .map(col => col.field);
+    if (editableParams.length > 0) {
+      // setInputs(rows.map(row=>))
+    }
+  }, [columns, rows]);
   const TableContentContainer = styled.div`
     display: grid;
     grid-template-columns: ${showIndex ? '70px' : ''} repeat(
@@ -71,9 +80,10 @@ const TableRow = ({
     if (e.target) {
       const { name, value } = e.target as HTMLInputElement;
       const [field, id] = name.split('-');
-      onUpdate(parseInt(id), field, value);
+      onUpdate(id, field, value);
     }
   };
+  console.log('row');
   return (
     <>
       {rows.map((row, key) => {
@@ -87,35 +97,31 @@ const TableRow = ({
                     <IconStyle>
                       {row[rowKey] ? (
                         <Revision
-                          onClick={() =>
-                            onUpdate(row.id as number, rowKey, false)
-                          }
+                          onClick={() => onUpdate(row.id + '', rowKey, false)}
                         />
                       ) : (
                         <EditAlt
-                          onClick={() =>
-                            onUpdate(row.id as number, rowKey, true)
-                          }
+                          onClick={() => onUpdate(row.id + '', rowKey, true)}
                         />
                       )}
                     </IconStyle>
                     <IconStyle>
-                      <DeleteOutline
-                        onClick={() => onRemove(row.id as number)}
-                      />
+                      <DeleteOutline onClick={() => onRemove(row.id + '')} />
                     </IconStyle>
                   </TableContent>
                 );
               } else if (rowKey === 'id') {
                 return null;
               }
-              if (columns[index]?.editable) {
+              if (
+                columns[index]?.editable &&
+                typeof row[rowKey] !== 'boolean'
+              ) {
                 return (
                   <TableInputContent
                     name={`${rowKey}-${row.id}`}
-                    value={row[rowKey]}
+                    value={row[rowKey].toString()}
                     disabled={!row?.editMode}
-                    onChange={onChangeInput}
                   />
                 );
               } else {

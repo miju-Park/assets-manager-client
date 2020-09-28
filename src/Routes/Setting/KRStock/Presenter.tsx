@@ -1,7 +1,30 @@
 import React from 'react';
 import styled from 'styled-components';
 import Table from '../../../Components/Table';
+import { Save } from '@styled-icons/heroicons-outline/Save';
 
+const TableContainer = styled.div`
+  margin-top: 30px;
+  position: relative;
+`;
+const IconStyle = styled.span`
+  color: white;
+  display: inline-block;
+  width: 35px;
+  height: 35px;
+  line-height: 35px;
+  cursor: pointer;
+  &:hover {
+    color: #e14eca;
+  }
+  cursor: pointer;
+`;
+
+const UpdateButtonGroup = styled.div`
+  position: absolute;
+  right: 0;
+  top: -10px;
+`;
 const Container = styled.div`
   padding: 78px 30px 30px 280px;
   min-height: calc(100vh - 70px);
@@ -11,11 +34,9 @@ const PageTitle = styled.h1`
   font-weight: bold;
   font-size: 2.5rem;
 `;
-const TableContainer = styled.div`
-  margin-top: 30px;
-`;
-type StockProps = {
-  id: number;
+
+export type StockProps = {
+  id: string;
   title: string;
   ticker: string;
   currentPrice: number;
@@ -23,17 +44,19 @@ type StockProps = {
   count: number;
   ratio: string;
   profit: string;
+  editMode: boolean;
 };
 
 type KRStockProps = {
   list: StockProps[];
-  onRemove: (id: number) => void;
+  onRemove: (id: string) => void;
   onAdd: () => void;
   onUpdate: (
-    id: number,
+    id: string,
     field: string,
     value: string | number | boolean,
   ) => void;
+  onSave: () => void;
 };
 
 const KRStockPresenter = ({
@@ -41,6 +64,7 @@ const KRStockPresenter = ({
   onAdd,
   onRemove,
   onUpdate,
+  onSave,
 }: KRStockProps) => {
   const summary = {
     current: list.reduce(
@@ -55,7 +79,13 @@ const KRStockPresenter = ({
   return (
     <Container>
       <PageTitle>국내주식 내역</PageTitle>
+
       <TableContainer>
+        <UpdateButtonGroup>
+          <IconStyle>
+            <Save onClick={onSave} />
+          </IconStyle>
+        </UpdateButtonGroup>
         <Table
           columns={[
             { field: 'id', label: '#', editable: false },

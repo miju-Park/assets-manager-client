@@ -1,7 +1,11 @@
 import { ASSETS_TYPE, CURRENCY } from './types';
 
 export const getPercentage = (target: number, total: number): string => {
-  return `${((target / total) * 100).toFixed(1)}%`;
+  const data = (target / total) * 100;
+  if (isNaN(data)) {
+    return '-%';
+  }
+  return `${data.toFixed(1)}%`;
 };
 
 const markingComma = (num: number): string => {
@@ -45,6 +49,25 @@ export const getAssetsLabel = (type: ASSETS_TYPE): string => {
       return '개인연금';
     case ASSETS_TYPE.CMA:
       return 'CMA';
+    default:
+      return '';
+  }
+};
+
+export const getStockTicker = (title: string): string => {
+  switch (title) {
+    case '넷마블':
+      return '251270';
+    case '삼성전자':
+      return '005930';
+    case '현대건설':
+      return '000720';
+    case 'NAVER':
+      return '035420';
+    case 'KODEX 한국대만IT프리미어':
+      return '298770';
+    case 'KODEX 2차전지산업':
+      return '305720';
     default:
       return '';
   }
