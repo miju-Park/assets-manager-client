@@ -12,3 +12,10 @@ export enum ASSETS_TYPE {
   IRP = 'IRP',
   PersonalPension = 'PersonalPension',
 }
+
+export type TableColumnInfo = {
+  field: string;
+  label: string;
+  sortable?: boolean;
+  editable: boolean;
+};
