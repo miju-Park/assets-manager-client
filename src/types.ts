@@ -19,3 +19,27 @@ export type TableColumnInfo = {
   sortable?: boolean;
   editable: boolean;
 };
+
+export type StockTableProps = {
+  onRemove: (id: string) => void;
+  onAdd: () => void;
+  onUpdate: (
+    id: string,
+    field: string,
+    value: string | number | boolean,
+  ) => void;
+  onSave: () => void;
+};
+
+export type StockProps = {
+  id: string;
+  title: string;
+  ticker: string;
+  currentPrice: number;
+  averagePrice: number;
+  count: number;
+  ratio: string;
+  profit: string;
+  editMode: boolean;
+  balance?: number;
+};

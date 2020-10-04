@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import gql from 'graphql-tag';
 import { getPercentage, getStockTicker } from '../../../utils';
-import KRStockPresenter from './Presenter';
 import { useMutation, useQuery } from 'react-apollo';
 import { useRecoilState } from 'recoil';
-import { krStockState } from '../../atoms';
+import { usdStockState } from '../../atoms';
+import USDStockPresenter from './Presenter';
 import { StockProps } from '../../../types';
 
 const GET_STOCK_LIST = gql`
   {
-    assets(filter: "KRStock") {
+    assets(filter: "USDStock") {
       list {
         id
         title
@@ -17,11 +17,14 @@ const GET_STOCK_LIST = gql`
         currentPrice
         averagePrice
         count
+        balance
       }
+    }
+    setting {
+      exchangeRate
     }
   }
 `;
-
 const ADD_ASSETS = gql`
   mutation createAsset(
     $title: String!
@@ -30,12 +33,12 @@ const ADD_ASSETS = gql`
     $averagePrice: Float!
   ) {
     createAsset(
-      type: "KRStock"
+      type: "USDStock"
       title: $title
       ticker: $ticker
       count: $count
       averagePrice: $averagePrice
-      currency: 0
+      currency: 1
     ) {
       id
     }
@@ -46,7 +49,6 @@ const REMOVE_ASSETS = gql`
     deleteAsset(id: $id)
   }
 `;
-
 const UPDATE_ASSETS = gql`
   mutation updateAsset(
     $id: Int!
@@ -71,14 +73,15 @@ type GetAssetsQuery = {
   assets: {
     list: StockProps[];
   };
+  setting: {
+    exchangeRate: number;
+  }[];
 };
-
-const KRStockContainer = () => {
+const USDStockContainer = () => {
   const [removedId, setRemovedId] = useState<string[]>([]);
   const [stockLists, setStockLists] = useRecoilState<StockProps[]>(
-    krStockState,
+    usdStockState,
   );
-  // const [stockLists, setStockLists] = useState<StockProps[]>([]);
   const { loading, error, data } = useQuery<GetAssetsQuery>(GET_STOCK_LIST);
   const [createAsset, { data: createData }] = useMutation(ADD_ASSETS);
   const [removeAsset, { data: removeData }] = useMutation(REMOVE_ASSETS);
@@ -89,9 +92,10 @@ const KRStockContainer = () => {
     }
     const {
       assets: { list },
+      setting: [{ exchangeRate }],
     } = data;
     const totalBalance = list.reduce(
-      (sum, item) => sum + item.count * item.currentPrice,
+      (sum, item) => sum + item?.count * item.currentPrice * exchangeRate,
       0,
     );
 
@@ -109,12 +113,14 @@ const KRStockContainer = () => {
             item.currentPrice - item.averagePrice,
             item.averagePrice,
           ),
-          ratio: getPercentage(item.currentPrice * item.count, totalBalance),
+          ratio: getPercentage(
+            item.currentPrice * item.count * exchangeRate,
+            totalBalance,
+          ),
           editMode: false,
         };
       }),
     ]);
-    // setTotalBalance(totalBalance);
   }, [data]);
 
   if (loading) return <p>Loading...</p>;
@@ -197,7 +203,8 @@ const KRStockContainer = () => {
   };
 
   return (
-    <KRStockPresenter
+    <USDStockPresenter
+      exchangeRate={data?.setting[0]?.exchangeRate || 1}
       onRemove={onRemove}
       onAdd={onAdd}
       onUpdate={onUpdate}
@@ -205,4 +212,4 @@ const KRStockContainer = () => {
     />
   );
 };
-export default KRStockContainer;
+export default USDStockContainer;

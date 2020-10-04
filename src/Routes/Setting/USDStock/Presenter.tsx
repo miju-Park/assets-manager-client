@@ -3,8 +3,8 @@ import styled from 'styled-components';
 import Table from '../../../Components/Table';
 import { Save } from '@styled-icons/heroicons-outline/Save';
 import { useRecoilState } from 'recoil';
-import { krStockState } from '../../atoms';
 import { StockTableProps } from '../../../types';
+import { usdStockState } from '../../atoms';
 
 const TableContainer = styled.div`
   margin-top: 30px;
@@ -38,26 +38,27 @@ const PageTitle = styled.h1`
   font-size: 2.5rem;
 `;
 
-const KRStockPresenter = ({
+const USDStockPresenter = ({
+  exchangeRate,
   onAdd,
   onRemove,
   onUpdate,
   onSave,
-}: StockTableProps) => {
-  const [list, setList] = useRecoilState(krStockState);
+}: StockTableProps & { exchangeRate: number }) => {
+  const [list, setList] = useRecoilState(usdStockState);
   const summary = {
     current: list.reduce(
-      (sum, item) => sum + item.count * item.currentPrice,
+      (sum, item) => sum + item.count * item.currentPrice * exchangeRate,
       0,
     ),
     average: list.reduce(
-      (sum, item) => sum + item.count * item.averagePrice,
+      (sum, item) => sum + item.count * item.averagePrice * exchangeRate,
       0,
     ),
   };
   return (
     <Container>
-      <PageTitle>국내주식 내역</PageTitle>
+      <PageTitle>해외주식 내역</PageTitle>
 
       <TableContainer>
         <UpdateButtonGroup>
@@ -76,7 +77,7 @@ const KRStockPresenter = ({
             { field: 'profit', label: '손익률', editable: false },
             { field: 'ratio', label: '비중', editable: false },
           ]}
-          rows={krStockState}
+          rows={usdStockState}
           showIndex={true}
           editable={true}
           summary={summary}
@@ -88,4 +89,4 @@ const KRStockPresenter = ({
     </Container>
   );
 };
-export default KRStockPresenter;
+export default USDStockPresenter;

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { StyledIconBase } from '@styled-icons/styled-icon';
 import { Dashboard } from '@styled-icons/zondicons/Dashboard';
 import { Monitor } from '@styled-icons/open-iconic/Monitor';
+import { GraphUp } from '@styled-icons/bootstrap/GraphUp';
 import { useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
 
@@ -117,6 +118,17 @@ const Sidebar = () => {
               <Monitor />
             </IconStyleWrapper>
             국내주식
+          </MenuItem>
+        </MenuContainer>
+        <MenuContainer>
+          <MenuItem
+            to="/setting/usdstock"
+            active={pathname === '/setting/usdstock'}
+          >
+            <IconStyleWrapper>
+              <GraphUp />
+            </IconStyleWrapper>
+            해외주식
           </MenuItem>
         </MenuContainer>
       </SidebarWrapper>

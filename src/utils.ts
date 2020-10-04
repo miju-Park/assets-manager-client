@@ -69,6 +69,20 @@ export const getStockTicker = (title: string): string => {
       return '305720';
     case '현금':
       return '';
+    case '애플':
+      return 'AAPL';
+    case 'SPDR':
+      return 'DIA';
+    case 'ISHARES GOLD':
+      return 'IAU';
+    case '마이크로소프트':
+      return 'MSFT';
+    case '엔비디아':
+      return 'NVDA';
+    case '테슬라':
+      return 'TSLA';
+    case 'USD':
+      return '';
     default:
       return '';
   }
