@@ -8,14 +8,13 @@ export const getPercentage = (target: number, total: number): string => {
   return `${data.toFixed(1)}%`;
 };
 
-const markingComma = (num: number): string => {
+export const markingComma = (num: number): string => {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
 
 export const getAbstractNumber = (num: number, currency: CURRENCY): string => {
   if (currency === CURRENCY.KRW) {
     const targetNumber = parseInt(num + '');
-    console.log(targetNumber.toString().length);
     if (targetNumber.toString().length > 8) {
       const hundredMillion = parseInt(targetNumber / 100000000 + '');
       const remain = targetNumber % 100000000;
@@ -68,6 +67,8 @@ export const getStockTicker = (title: string): string => {
       return '298770';
     case 'KODEX 2차전지산업':
       return '305720';
+    case '현금':
+      return '';
     default:
       return '';
   }

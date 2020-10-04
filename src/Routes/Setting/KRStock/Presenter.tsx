@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import Table from '../../../Components/Table';
 import { Save } from '@styled-icons/heroicons-outline/Save';
+import { useRecoilState } from 'recoil';
+import { krStockState } from '../../atoms';
 
 const TableContainer = styled.div`
   margin-top: 30px;
@@ -48,7 +50,6 @@ export type StockProps = {
 };
 
 type KRStockProps = {
-  list: StockProps[];
   onRemove: (id: string) => void;
   onAdd: () => void;
   onUpdate: (
@@ -60,12 +61,12 @@ type KRStockProps = {
 };
 
 const KRStockPresenter = ({
-  list,
   onAdd,
   onRemove,
   onUpdate,
   onSave,
 }: KRStockProps) => {
+  const [list, setList] = useRecoilState(krStockState);
   const summary = {
     current: list.reduce(
       (sum, item) => sum + item.count * item.currentPrice,
@@ -97,7 +98,7 @@ const KRStockPresenter = ({
             { field: 'profit', label: '손익률', editable: false },
             { field: 'ratio', label: '비중', editable: false },
           ]}
-          rows={list}
+          rows={krStockState}
           showIndex={true}
           editable={true}
           summary={summary}

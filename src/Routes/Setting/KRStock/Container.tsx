@@ -3,6 +3,8 @@ import gql from 'graphql-tag';
 import { getPercentage, getStockTicker } from '../../../utils';
 import KRStockPresenter, { StockProps } from './Presenter';
 import { useMutation, useQuery } from 'react-apollo';
+import { useRecoilState } from 'recoil';
+import { krStockState } from '../../atoms';
 
 const GET_STOCK_LIST = gql`
   {
@@ -38,6 +40,31 @@ const ADD_ASSETS = gql`
     }
   }
 `;
+const REMOVE_ASSETS = gql`
+  mutation deleteAsset($id: Int!) {
+    deleteAsset(id: $id)
+  }
+`;
+
+const UPDATE_ASSETS = gql`
+  mutation updateAsset(
+    $id: Int!
+    $title: String!
+    $count: Int!
+    $ticker: String!
+    $averagePrice: Float!
+  ) {
+    updateAsset(
+      id: $id
+      title: $title
+      ticker: $ticker
+      count: $count
+      averagePrice: $averagePrice
+    ) {
+      id
+    }
+  }
+`;
 
 type GetAssetsQuery = {
   assets: {
@@ -46,33 +73,37 @@ type GetAssetsQuery = {
 };
 
 const KRStockContainer = () => {
-  const [totalBalance, setTotalBalance] = useState(0);
-  const [stockLists, setStockLists] = useState<StockProps[]>([]);
+  const [removedId, setRemovedId] = useState<string[]>([]);
+  const [stockLists, setStockLists] = useRecoilState<StockProps[]>(
+    krStockState,
+  );
+  // const [stockLists, setStockLists] = useState<StockProps[]>([]);
   const { loading, error, data } = useQuery<GetAssetsQuery>(GET_STOCK_LIST);
   const [createAsset, { data: createData }] = useMutation(ADD_ASSETS);
+  const [removeAsset, { data: removeData }] = useMutation(REMOVE_ASSETS);
+  const [updateAsset, { data: updateData }] = useMutation(UPDATE_ASSETS);
   useEffect(() => {
     if (!data) {
       return;
     }
-    console.log('update');
     const {
       assets: { list },
     } = data;
-    console.log(list);
     const totalBalance = list.reduce(
       (sum, item) => sum + item.count * item.currentPrice,
       0,
     );
 
-    setStockLists(
-      list.map(item => {
+    setStockLists(prev => [
+      ...prev,
+      ...list.map(item => {
         const { id, title, ticker, currentPrice, averagePrice, count } = item;
         return {
           id,
           title,
           ticker,
-          currentPrice,
-          averagePrice,
+          currentPrice: currentPrice,
+          averagePrice: averagePrice,
           count,
           profit: getPercentage(
             item.currentPrice - item.averagePrice,
@@ -82,20 +113,21 @@ const KRStockContainer = () => {
           editMode: false,
         };
       }),
-    );
-    setTotalBalance(totalBalance);
+    ]);
+    // setTotalBalance(totalBalance);
   }, [data]);
 
   if (loading) return <p>Loading...</p>;
 
   const onRemove = (id: string) => {
     setStockLists(prev => prev.filter(item => item.id !== id));
+    setRemovedId(prev => [...prev, id]);
   };
   const onAdd = () => {
     setStockLists(prev => [
       ...prev,
       {
-        id: 'create',
+        id: `create-${prev.length}`,
         title: '',
         ticker: '',
         currentPrice: 0,
@@ -113,27 +145,59 @@ const KRStockContainer = () => {
     value: string | number | boolean,
   ) => {
     setStockLists(prev =>
-      prev.map(item => (item.id === id ? { ...item, [field]: value } : item)),
+      prev.map(item =>
+        item.id === id
+          ? {
+              ...item,
+              [field]: field.includes('Price') ? +value : value,
+            }
+          : item,
+      ),
     );
   };
   const onSaveToServer = () => {
-    stockLists.map(item => {
-      if (item.id === 'create') {
-        createAsset({
+    stockLists.map(async item => {
+      if (item.id.includes('create') && item.title !== '') {
+        await createAsset({
           variables: {
             title: item.title,
-            count: item.count,
+            count: parseInt(item.count + ''),
             ticker: getStockTicker(item.title),
-            averagePrice: item.averagePrice,
+            averagePrice: parseFloat(item.averagePrice + ''),
           },
         });
+      } else {
+        const target = data?.assets.list.find(list => list.id === item.id);
+        if (target) {
+          if (
+            target.count !== item.count ||
+            target.ticker !== item.ticker ||
+            +target.averagePrice !== +item.averagePrice
+          ) {
+            await updateAsset({
+              variables: {
+                id: target.id,
+                title: item.title,
+                ticker: item.ticker,
+                count: item.count,
+                averagePrice: +item.averagePrice,
+              },
+            });
+          }
+        }
       }
+    });
+    removedId.map(async item => {
+      await removeAsset({
+        variables: {
+          id: +item,
+        },
+      });
     });
   };
 
   return (
     <KRStockPresenter
-      list={stockLists}
       onRemove={onRemove}
       onAdd={onAdd}
       onUpdate={onUpdate}

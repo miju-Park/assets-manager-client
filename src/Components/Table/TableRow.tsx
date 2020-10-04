@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { TableColumnInfo } from '../../types';
 import { EditAlt } from '@styled-icons/boxicons-regular/EditAlt';
 import { Revision } from '@styled-icons/boxicons-regular/Revision';
 import { DeleteOutline } from '@styled-icons/material/DeleteOutline';
 
-type TableRowProps = {
+import { TableColumnInfo } from '../../types';
+import EditableRow from './EditaleRow';
+
+type RowProps = {
+  index: number;
   columns: TableColumnInfo[];
-  rows: { [key: string]: string | number | boolean }[];
+  row: { [key: string]: string | number | boolean };
   showIndex: boolean;
   editable: boolean;
   onRemove: (id: string) => void;
@@ -17,25 +20,11 @@ type TableRowProps = {
     value: string | number | boolean,
   ) => void;
 };
-
 const TableContent = styled.span`
   display: flex;
   align-items: center;
 `;
-const TableInputContent = styled.input`
-  width: 100%;
-  display: inline-block;
-  font-size: 1rem;
-  border: none;
-  padding: 0;
-  padding-left: 5px;
-  margin: 5px 0;
-  background-color: ${props => (props.disabled ? 'transparent' : 'white')};
-  &:focus {
-    outline: none;
-  }
-  color: ${props => (props.disabled ? '#ced4da' : 'black')};
-`;
+
 const IconStyle = styled.span`
   color: white;
   width: 25px;
@@ -48,22 +37,14 @@ const IconStyle = styled.span`
 `;
 
 const TableRow = ({
+  index,
   columns,
-  rows,
+  row,
   showIndex,
   editable,
-  onRemove,
   onUpdate,
-}: TableRowProps) => {
-  const [inputs, setInputs] = useState([]);
-  useEffect(() => {
-    const editableParams = columns
-      .filter(col => col.editable)
-      .map(col => col.field);
-    if (editableParams.length > 0) {
-      // setInputs(rows.map(row=>))
-    }
-  }, [columns, rows]);
+  onRemove,
+}: RowProps) => {
   const TableContentContainer = styled.div`
     display: grid;
     grid-template-columns: ${showIndex ? '70px' : ''} repeat(
@@ -76,62 +57,51 @@ const TableRow = ({
       background-color: #e14eca;
     }
   `;
-  const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target) {
-      const { name, value } = e.target as HTMLInputElement;
-      const [field, id] = name.split('-');
-      onUpdate(id, field, value);
-    }
-  };
-  console.log('row');
+
   return (
-    <>
-      {rows.map((row, key) => {
-        return (
-          <TableContentContainer>
-            {showIndex && <TableContent>{key + 1}</TableContent>}
-            {Object.keys(row).map((rowKey, index) => {
-              if (rowKey === 'editMode') {
-                return (
-                  <TableContent>
-                    <IconStyle>
-                      {row[rowKey] ? (
-                        <Revision
-                          onClick={() => onUpdate(row.id + '', rowKey, false)}
-                        />
-                      ) : (
-                        <EditAlt
-                          onClick={() => onUpdate(row.id + '', rowKey, true)}
-                        />
-                      )}
-                    </IconStyle>
-                    <IconStyle>
-                      <DeleteOutline onClick={() => onRemove(row.id + '')} />
-                    </IconStyle>
-                  </TableContent>
-                );
-              } else if (rowKey === 'id') {
-                return null;
-              }
-              if (
-                columns[index]?.editable &&
-                typeof row[rowKey] !== 'boolean'
-              ) {
-                return (
-                  <TableInputContent
-                    name={`${rowKey}-${row.id}`}
-                    value={row[rowKey].toString()}
-                    disabled={!row?.editMode}
+    <TableContentContainer key={index}>
+      {showIndex && <TableContent key={'row_key'}>{index + 1}</TableContent>}
+      {Object.keys(row).map((param, paramIndex) => {
+        if (param === 'editMode') {
+          return (
+            <TableContent>
+              <IconStyle>
+                {row[param] ? (
+                  <Revision
+                    onClick={() => onUpdate(row.id + '', param, false)}
                   />
-                );
-              } else {
-                return <TableContent>{row[rowKey]}</TableContent>;
-              }
-            })}
-          </TableContentContainer>
-        );
+                ) : (
+                  <EditAlt onClick={() => onUpdate(row.id + '', param, true)} />
+                )}
+              </IconStyle>
+              <IconStyle>
+                <DeleteOutline onClick={() => onRemove(row.id + '')} />
+              </IconStyle>
+            </TableContent>
+          );
+        } else if (param === 'id') {
+          return null;
+        }
+        if (columns[paramIndex]?.editable && row[param] !== undefined) {
+          return (
+            <EditableRow
+              id={row.id as string}
+              key={['row', param, index].join('_')}
+              param={param}
+              value={row[param] as string}
+              editMode={!row?.editMode}
+              onUpdate={onUpdate}
+            />
+          );
+        } else {
+          return (
+            <TableContent key={['row', param].join('_')}>
+              {row[param]}
+            </TableContent>
+          );
+        }
       })}
-    </>
+    </TableContentContainer>
   );
 };
 export default TableRow;

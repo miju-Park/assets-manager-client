@@ -1,14 +1,15 @@
 import { CURRENCY, TableColumnInfo } from '../../types';
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import TableHeader from './TableHeader';
-import TableRow from './TableRow';
 import { getAbstractNumber, getPercentage } from '../../utils';
 import { AddCircle } from '@styled-icons/ionicons-outline/AddCircle';
+import { RecoilState, useRecoilState } from 'recoil';
+import TableRow from './TableRow';
 
-export type TableProps = {
+export type TableProps<T> = {
   columns: TableColumnInfo[];
-  rows: { [key: string]: string | number | boolean }[];
+  rows: RecoilState<T[]>;
   showIndex: boolean;
   editable: boolean;
   summary: {
@@ -69,7 +70,7 @@ const Summary = styled.span`
   align-items: center;
 `;
 
-const Table = ({
+const Table = <T extends {}>({
   columns,
   rows,
   showIndex,
@@ -78,7 +79,8 @@ const Table = ({
   onAdd,
   onRemove,
   onUpdate,
-}: TableProps) => {
+}: TableProps<T>) => {
+  const [list, setList] = useRecoilState(rows);
   const SummaryContainer = styled.div`
     background-color: #27293d;
     display: grid;
@@ -98,14 +100,18 @@ const Table = ({
           showIndex={showIndex}
           editable={editable}
         />
-        <TableRow
-          columns={columns}
-          rows={rows}
-          showIndex={showIndex}
-          editable={editable}
-          onRemove={onRemove}
-          onUpdate={onUpdate}
-        />
+        {list.map((row, index) => (
+          <TableRow
+            key={index}
+            index={index}
+            columns={columns}
+            row={row}
+            showIndex={showIndex}
+            editable={editable}
+            onRemove={onRemove}
+            onUpdate={onUpdate}
+          />
+        ))}
         <TableAddColumn>
           <IconStyle>
             <AddCircle onClick={onAdd} />
