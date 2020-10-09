@@ -12,7 +12,7 @@ export type TableProps<T> = {
   rows: RecoilState<T[]>;
   showIndex: boolean;
   editable: boolean;
-  summary: {
+  summary?: {
     current: number;
     average: number;
   };
@@ -118,14 +118,23 @@ const Table = <T extends {}>({
           </IconStyle>
         </TableAddColumn>
       </TableContainer>
-      <Title>총합</Title>
-      <SummaryContainer>
-        <SummaryTitle>총합</SummaryTitle>
-        <Summary>{getAbstractNumber(summary.current, CURRENCY.KRW)}</Summary>
-        <Summary>
-          {getPercentage(summary.current - summary.average, summary.average)}
-        </Summary>
-      </SummaryContainer>
+      {summary && (
+        <>
+          <Title>총합</Title>
+          <SummaryContainer>
+            <SummaryTitle>총합</SummaryTitle>
+            <Summary>
+              {getAbstractNumber(summary.current, CURRENCY.KRW)}
+            </Summary>
+            <Summary>
+              {getPercentage(
+                summary.current - summary.average,
+                summary.average,
+              )}
+            </Summary>
+          </SummaryContainer>
+        </>
+      )}
     </>
   );
 };

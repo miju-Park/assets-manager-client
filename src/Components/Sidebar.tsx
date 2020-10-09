@@ -4,6 +4,7 @@ import { StyledIconBase } from '@styled-icons/styled-icon';
 import { Dashboard } from '@styled-icons/zondicons/Dashboard';
 import { Monitor } from '@styled-icons/open-iconic/Monitor';
 import { GraphUp } from '@styled-icons/bootstrap/GraphUp';
+import { HandHoldingUsd } from '@styled-icons/fa-solid/HandHoldingUsd';
 import { useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
 
@@ -129,6 +130,17 @@ const Sidebar = () => {
               <GraphUp />
             </IconStyleWrapper>
             해외주식
+          </MenuItem>
+        </MenuContainer>
+        <MenuContainer>
+          <MenuItem
+            to="/setting/account"
+            active={pathname === '/setting/account'}
+          >
+            <IconStyleWrapper>
+              <HandHoldingUsd />
+            </IconStyleWrapper>
+            예/적금 & CMA
           </MenuItem>
         </MenuContainer>
       </SidebarWrapper>

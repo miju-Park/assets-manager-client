@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import Table from '../../../Components/Table';
-import { Save } from '@styled-icons/heroicons-outline/Save';
-import { useRecoilState } from 'recoil';
-import { krStockState } from '../../atoms';
+import { krStockState, krStockSummary } from '../../atoms';
 import { StockTableProps } from '../../../types';
+import { useRecoilValue } from 'recoil';
 
 const TableContainer = styled.div`
   margin-top: 30px;
@@ -38,33 +37,13 @@ const PageTitle = styled.h1`
   font-size: 2.5rem;
 `;
 
-const KRStockPresenter = ({
-  onAdd,
-  onRemove,
-  onUpdate,
-  onSave,
-}: StockTableProps) => {
-  const [list, setList] = useRecoilState(krStockState);
-  const summary = {
-    current: list.reduce(
-      (sum, item) => sum + item.count * item.currentPrice,
-      0,
-    ),
-    average: list.reduce(
-      (sum, item) => sum + item.count * item.averagePrice,
-      0,
-    ),
-  };
+const KRStockPresenter = ({ onAdd, onRemove, onUpdate }: StockTableProps) => {
+  const summary = useRecoilValue(krStockSummary);
   return (
     <Container>
       <PageTitle>국내주식 내역</PageTitle>
 
       <TableContainer>
-        <UpdateButtonGroup>
-          <IconStyle>
-            <Save onClick={onSave} />
-          </IconStyle>
-        </UpdateButtonGroup>
         <Table
           columns={[
             { field: 'id', label: '#', editable: false },

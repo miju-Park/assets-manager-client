@@ -28,7 +28,7 @@ export type StockTableProps = {
     field: string,
     value: string | number | boolean,
   ) => void;
-  onSave: () => void;
+  onSave?: () => void;
 };
 
 export type StockProps = {
@@ -38,8 +38,8 @@ export type StockProps = {
   currentPrice: number;
   averagePrice: number;
   count: number;
-  ratio: string;
   profit: string;
+  ratio?: string;
   editMode: boolean;
   balance?: number;
 };
