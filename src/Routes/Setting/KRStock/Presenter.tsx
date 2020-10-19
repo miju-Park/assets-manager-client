@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import Table from '../../../Components/Table';
 import { krStockState, krStockSummary } from '../../atoms';
@@ -8,24 +8,6 @@ import { useRecoilValue } from 'recoil';
 const TableContainer = styled.div`
   margin-top: 30px;
   position: relative;
-`;
-const IconStyle = styled.span`
-  color: white;
-  display: inline-block;
-  width: 35px;
-  height: 35px;
-  line-height: 35px;
-  cursor: pointer;
-  &:hover {
-    color: #e14eca;
-  }
-  cursor: pointer;
-`;
-
-const UpdateButtonGroup = styled.div`
-  position: absolute;
-  right: 0;
-  top: -10px;
 `;
 const Container = styled.div`
   padding: 78px 30px 30px 280px;

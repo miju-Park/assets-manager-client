@@ -36,6 +36,14 @@ const IconStyle = styled.span`
   cursor: pointer;
 `;
 
+const dateRegEx = /\d{4}-\d{1,2}-\d{1,2}T\d{2}:\d{2}:\d{2}/g;
+const parsingRowContent = (content: string | number | boolean) => {
+  if (typeof content === 'string' && dateRegEx.test(content)) {
+    return content.split('T')[0] || '';
+  }
+  return content;
+};
+
 const TableRow = ({
   index,
   columns,
@@ -88,7 +96,7 @@ const TableRow = ({
               id={row.id as string}
               key={['row', param, index].join('_')}
               param={param}
-              value={row[param] as string}
+              value={parsingRowContent(row[param]) as string}
               editMode={!row?.editMode}
               onUpdate={onUpdate}
             />
@@ -96,7 +104,7 @@ const TableRow = ({
         } else {
           return (
             <TableContent key={['row', param].join('_')}>
-              {row[param]}
+              {parsingRowContent(row[param])}
             </TableContent>
           );
         }

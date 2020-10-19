@@ -1,17 +1,10 @@
-import React, {
-  createRef,
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 
 import { getPercentage, getStockTicker } from '../../../utils';
 import KRStockPresenter from './Presenter';
 import { useMutation, useQuery } from 'react-apollo';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { krStockState, krStockSummary } from '../../atoms';
+import { useRecoilState } from 'recoil';
+import { krStockState } from '../../atoms';
 import { StockProps } from '../../../types';
 import {
   GET_STOCK_LIST,
@@ -33,13 +26,11 @@ const KRStockContainer = () => {
   const { loading, error, data, refetch } = useQuery<GetAssetsQuery>(
     GET_STOCK_LIST,
   );
-  const serverData = useRef<StockProps[]>();
   useEffect(() => {
     if (data) {
       const {
         assets: { list },
       } = data;
-      serverData.current = list;
       setStockLists(
         list.map(item => {
           const { id, title, ticker, currentPrice, averagePrice, count } = item;
@@ -66,9 +57,7 @@ const KRStockContainer = () => {
   const [removeAsset, { data: removeData }] = useMutation(REMOVE_ASSETS, {
     onCompleted: () => refetch(),
   });
-  const [updateAsset, { data: updateData }] = useMutation(UPDATE_ASSETS, {
-    onCompleted: () => refetch(),
-  });
+  const [updateAsset, { data: updateData }] = useMutation(UPDATE_ASSETS);
 
   const onAdd = useCallback(() => {
     setStockLists(prev => [
@@ -110,6 +99,9 @@ const KRStockContainer = () => {
     setStockLists(prev =>
       prev.map(item => (item.id === id ? targetItem : item)),
     );
+    if (field === 'editMode') {
+      return;
+    }
     if (
       targetItem.id.includes('create') &&
       targetItem.title &&
@@ -128,8 +120,8 @@ const KRStockContainer = () => {
       updateAsset({
         variables: {
           id: +targetItem.id,
-          title: +targetItem.title,
-          ticker: +targetItem.ticker,
+          title: targetItem.title,
+          ticker: targetItem.ticker,
           count: +targetItem.count,
           averagePrice: +targetItem.averagePrice,
         },

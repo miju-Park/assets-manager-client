@@ -1,73 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import gql from 'graphql-tag';
 import { getPercentage, getStockTicker } from '../../../utils';
 import { useMutation, useQuery } from 'react-apollo';
 import { useRecoilState } from 'recoil';
-import { usdStockState } from '../../atoms';
+import { exchangeRateState, usdStockState } from '../../atoms';
 import USDStockPresenter from './Presenter';
 import { StockProps } from '../../../types';
-
-const GET_STOCK_LIST = gql`
-  {
-    assets(filter: "USDStock") {
-      list {
-        id
-        title
-        ticker
-        currentPrice
-        averagePrice
-        count
-        balance
-      }
-    }
-    setting {
-      exchangeRate
-    }
-  }
-`;
-const ADD_ASSETS = gql`
-  mutation createAsset(
-    $title: String!
-    $count: Int!
-    $ticker: String!
-    $averagePrice: Float!
-  ) {
-    createAsset(
-      type: "USDStock"
-      title: $title
-      ticker: $ticker
-      count: $count
-      averagePrice: $averagePrice
-      currency: 1
-    ) {
-      id
-    }
-  }
-`;
-const REMOVE_ASSETS = gql`
-  mutation deleteAsset($id: Int!) {
-    deleteAsset(id: $id)
-  }
-`;
-const UPDATE_ASSETS = gql`
-  mutation updateAsset(
-    $id: Int!
-    $title: String!
-    $count: Int!
-    $ticker: String!
-    $averagePrice: Float!
-  ) {
-    updateAsset(
-      id: $id
-      title: $title
-      ticker: $ticker
-      count: $count
-      averagePrice: $averagePrice
-    ) {
-      id
-    }
-  }
-`;
+import {
+  ADD_ASSETS,
+  GET_STOCK_LIST,
+  REMOVE_ASSETS,
+  UPDATE_ASSETS,
+} from '../USDStock/query';
 
 type GetAssetsQuery = {
   assets: {
@@ -78,14 +22,15 @@ type GetAssetsQuery = {
   }[];
 };
 const USDStockContainer = () => {
-  const [removedId, setRemovedId] = useState<string[]>([]);
   const [stockLists, setStockLists] = useRecoilState<StockProps[]>(
     usdStockState,
   );
-  const { loading, error, data } = useQuery<GetAssetsQuery>(GET_STOCK_LIST);
-  const [createAsset, { data: createData }] = useMutation(ADD_ASSETS);
-  const [removeAsset, { data: removeData }] = useMutation(REMOVE_ASSETS);
-  const [updateAsset, { data: updateData }] = useMutation(UPDATE_ASSETS);
+  const [exchangeRate, setExchangeRate] = useRecoilState<number>(
+    exchangeRateState,
+  );
+  const { loading, error, data, refetch } = useQuery<GetAssetsQuery>(
+    GET_STOCK_LIST,
+  );
   useEffect(() => {
     if (!data) {
       return;
@@ -94,13 +39,8 @@ const USDStockContainer = () => {
       assets: { list },
       setting: [{ exchangeRate }],
     } = data;
-    const totalBalance = list.reduce(
-      (sum, item) => sum + item?.count * item.currentPrice * exchangeRate,
-      0,
-    );
-
-    setStockLists(prev => [
-      ...list.map(item => {
+    setStockLists(
+      list.map(item => {
         const { id, title, ticker, currentPrice, averagePrice, count } = item;
         return {
           id,
@@ -113,23 +53,33 @@ const USDStockContainer = () => {
             item.currentPrice - item.averagePrice,
             item.averagePrice,
           ),
-          ratio: getPercentage(
-            item.currentPrice * item.count * exchangeRate,
-            totalBalance,
-          ),
           editMode: false,
         };
       }),
-    ]);
+    );
+    setExchangeRate(exchangeRate);
   }, [data]);
 
-  if (loading) return <p>Loading...</p>;
+  const [createAsset, { data: createData }] = useMutation(ADD_ASSETS, {
+    onCompleted: () => refetch(),
+  });
+  const [removeAsset, { data: removeData }] = useMutation(REMOVE_ASSETS, {
+    onCompleted: () => refetch(),
+  });
+  const [updateAsset, { data: updateData }] = useMutation(UPDATE_ASSETS);
 
-  const onRemove = (id: string) => {
-    setStockLists(prev => prev.filter(item => item.id !== id));
-    setRemovedId(prev => [...prev, id]);
-  };
-  const onAdd = () => {
+  const onRemove = useCallback(
+    (id: string) => {
+      setStockLists(prev => prev.filter(item => item.id !== id));
+      removeAsset({
+        variables: {
+          id: +id,
+        },
+      });
+    },
+    [stockLists],
+  );
+  const onAdd = useCallback(() => {
     setStockLists(prev => [
       ...prev,
       {
@@ -144,72 +94,54 @@ const USDStockContainer = () => {
         editMode: true,
       },
     ]);
-  };
+  }, [stockLists]);
+
   const onUpdate = (
     id: string,
     field: string,
     value: string | number | boolean,
   ) => {
+    let [targetItem] = stockLists
+      .filter(stock => stock.id === id)
+      .map(stock => ({ ...stock, [field]: value }));
+
     setStockLists(prev =>
-      prev.map(item =>
-        item.id === id
-          ? {
-              ...item,
-              [field]: field.includes('Price') ? +value : value,
-            }
-          : item,
-      ),
+      prev.map(item => (item.id === id ? targetItem : item)),
     );
-  };
-  const onSaveToServer = () => {
-    stockLists.map(async item => {
-      if (item.id.includes('create') && item.title !== '') {
-        await createAsset({
-          variables: {
-            title: item.title,
-            count: parseInt(item.count + ''),
-            ticker: getStockTicker(item.title),
-            averagePrice: parseFloat(item.averagePrice + ''),
-          },
-        });
-      } else {
-        const target = data?.assets.list.find(list => list.id === item.id);
-        if (target) {
-          if (
-            target.count !== item.count ||
-            target.ticker !== item.ticker ||
-            +target.averagePrice !== +item.averagePrice
-          ) {
-            await updateAsset({
-              variables: {
-                id: +target.id,
-                title: item.title,
-                ticker: item.ticker,
-                count: +item.count,
-                averagePrice: +item.averagePrice,
-              },
-            });
-          }
-        }
-      }
-    });
-    removedId.map(async item => {
-      await removeAsset({
+    if (field === 'editMode') {
+      return;
+    }
+    if (
+      targetItem.id.includes('create') &&
+      targetItem.title &&
+      targetItem.averagePrice &&
+      targetItem.count
+    ) {
+      createAsset({
         variables: {
-          id: +item,
+          title: targetItem.title,
+          count: parseInt(targetItem.count + ''),
+          ticker: getStockTicker(targetItem.title),
+          averagePrice: parseFloat(targetItem.averagePrice + ''),
         },
       });
-    });
+    } else if (!targetItem.id.includes('create')) {
+      updateAsset({
+        variables: {
+          id: +targetItem.id,
+          title: targetItem.title,
+          ticker: targetItem.ticker,
+          count: +targetItem.count,
+          averagePrice: +targetItem.averagePrice,
+        },
+      });
+    }
   };
 
+  if (loading) return <p>Loading...</p>;
+
   return (
-    <USDStockPresenter
-      exchangeRate={data?.setting[0]?.exchangeRate || 1}
-      onRemove={onRemove}
-      onAdd={onAdd}
-      onUpdate={onUpdate}
-      onSave={onSaveToServer}
-    />
+    <USDStockPresenter onRemove={onRemove} onAdd={onAdd} onUpdate={onUpdate} />
   );
 };
 export default USDStockContainer;

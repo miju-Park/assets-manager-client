@@ -1,32 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import Table from '../../../Components/Table';
-import { Save } from '@styled-icons/heroicons-outline/Save';
-import { useRecoilState } from 'recoil';
+import { useRecoilValue } from 'recoil';
 import { StockTableProps } from '../../../types';
-import { usdStockState } from '../../atoms';
+import { usdStockState, usdStockSummary } from '../../atoms';
 
 const TableContainer = styled.div`
   margin-top: 30px;
   position: relative;
-`;
-const IconStyle = styled.span`
-  color: white;
-  display: inline-block;
-  width: 35px;
-  height: 35px;
-  line-height: 35px;
-  cursor: pointer;
-  &:hover {
-    color: #e14eca;
-  }
-  cursor: pointer;
-`;
-
-const UpdateButtonGroup = styled.div`
-  position: absolute;
-  right: 0;
-  top: -10px;
 `;
 const Container = styled.div`
   padding: 78px 30px 30px 280px;
@@ -38,34 +19,13 @@ const PageTitle = styled.h1`
   font-size: 2.5rem;
 `;
 
-const USDStockPresenter = ({
-  exchangeRate,
-  onAdd,
-  onRemove,
-  onUpdate,
-  onSave,
-}: StockTableProps & { exchangeRate: number }) => {
-  const [list, setList] = useRecoilState(usdStockState);
-  const summary = {
-    current: list.reduce(
-      (sum, item) => sum + item.count * item.currentPrice * exchangeRate,
-      0,
-    ),
-    average: list.reduce(
-      (sum, item) => sum + item.count * item.averagePrice * exchangeRate,
-      0,
-    ),
-  };
+const USDStockPresenter = ({ onAdd, onRemove, onUpdate }: StockTableProps) => {
+  const summary = useRecoilValue(usdStockSummary);
   return (
     <Container>
       <PageTitle>해외주식 내역</PageTitle>
 
       <TableContainer>
-        <UpdateButtonGroup>
-          <IconStyle>
-            <Save onClick={onSave} />
-          </IconStyle>
-        </UpdateButtonGroup>
         <Table
           columns={[
             { field: 'id', label: '#', editable: false },

@@ -43,3 +43,13 @@ export type StockProps = {
   editMode: boolean;
   balance?: number;
 };
+
+export type SavingProps = {
+  id: string;
+  bank: string;
+  title: string;
+  payment: number;
+  startdate: Date;
+  duedate: Date;
+  balance: number;
+};
